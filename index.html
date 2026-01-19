@@ -50,7 +50,7 @@
                 <p id="used-count" class="text-xl font-bold text-slate-700">--</p>
             </div>
             <div class="bg-slate-50 p-4 rounded-2xl text-center">
-                <p class="text-slate-400 text-xs mb-1">總課程數</p>
+                <p class="text-slate-400 text-xs mb-1">總節數</p>
                 <p class="text-xl font-bold text-slate-700">194</p>
             </div>
         </div>
@@ -120,7 +120,7 @@
             const btn = document.getElementById('submit-btn');
             const lessons = document.getElementById('lessons-select').value;
             
-            if (!confirm(`確定要記錄 ${lessons} 堂課程嗎？`)) return;
+            if (!confirm(`這次記錄 ${lessons} 堂嗎？`)) return;
             btn.disabled = true;
             const originalText = btn.innerHTML;
             btn.innerHTML = `
