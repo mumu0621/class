@@ -8,7 +8,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .progress-ring { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
@@ -41,7 +50,7 @@
                 <p id="used-count" class="text-xl font-bold text-slate-700">--</p>
             </div>
             <div class="bg-slate-50 p-4 rounded-2xl text-center">
-                <p class="text-slate-400 text-xs mb-1">總數</p>
+                <p class="text-slate-400 text-xs mb-1">總課程數</p>
                 <p class="text-xl font-bold text-slate-700">194</p>
             </div>
         </div>
@@ -66,62 +75,87 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxxYerOqxQwltMemZhaj475ZKfEdpOVrdkEq53YI0Qn0xw564XDM0PX-dBJzrIQSqhx/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbz2_1tABeWsdfyebl792EjQ1CNltboVaSZQxamQrDVpOdourGjb9wCPqRSe2NZpJwcP/exec";
         const circle = document.getElementById('progress-bar');
         const radius = circle.r.baseVal.value;
         const circumference = radius * 2 * Math.PI;
+
         document.getElementById('date-display').innerText = new Date().toLocaleDateString();
+
+        // 更新進度條
         function setProgress(percent) {
-            const offset = circumference - (percent / 100 * circumference);
+            const p = Math.min(Math.max(percent, 0), 100);
+            const offset = circumference - (p / 100 * circumference);
             circle.style.strokeDashoffset = offset;
         }
+
         async function refreshData() {
             try {
+                document.getElementById('remaining-count').classList.add('animate-pulse');
+                
                 const response = await fetch(GAS_URL);
+                if (!response.ok) throw new Error('網路回應不正確');
+                
                 const data = await response.json();
+                
                 const remaining = data.remaining;
                 const used = data.totalUsed;
                 const total = 194;
 
                 document.getElementById('remaining-count').innerText = remaining;
                 document.getElementById('used-count').innerText = used;
+                
+                // 計算已完成百分比
                 const percent = (used / total) * 100;
                 setProgress(percent);
+
             } catch (error) {
                 console.error("讀取失敗:", error);
+                document.getElementById('remaining-count').innerText = "ERR";
+            } finally {
+                document.getElementById('remaining-count').classList.remove('animate-pulse');
             }
         }
-
         async function submitData() {
             const btn = document.getElementById('submit-btn');
             const lessons = document.getElementById('lessons-select').value;
             
-            if (!confirm(`要記錄 ${lessons} 堂嗎？`)) return;
-
+            if (!confirm(`確定要記錄 ${lessons} 堂課程嗎？`)) return;
             btn.disabled = true;
-            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>處理中...</span>
+            `;
 
             try {
                 await fetch(GAS_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
-                    body: JSON.stringify({ lessons: lessons })
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify({ lessons: parseInt(lessons) })
                 });
-
-                setTimeout(() => {
-                    alert("記錄成功！");
+                setTimeout(async () => {
+                    alert("記錄已成功提交！");
                     btn.disabled = false;
-                    btn.innerText = "確認記錄";
-                    refreshData();
-                }, 1000);
+                    btn.innerHTML = originalText;
+                    await refreshData();
+                }, 1500);
 
             } catch (error) {
-                alert("記錄失敗，網路異常");
+                console.error("提交失敗:", error);
+                alert("連線發生錯誤，請稍後再試");
                 btn.disabled = false;
-                btn.innerText = "確認記錄";
+                btn.innerHTML = originalText;
             }
         }
-        refreshData();
+
+        window.onload = refreshData;
     </script>
 </body>
 </html>
