@@ -48,7 +48,7 @@
 
         <div class="space-y-4">
             <div class="relative">
-                <label class="text-xs font-black text-slate-400 uppercase mb-2 block ml-1">本次上課堂數</label>
+                <label class="text-xs font-black text-slate-400 uppercase mb-2 block ml-1">這次上課堂數</label>
                 <select id="lessons-select" class="w-full bg-slate-50 border-none text-slate-700 py-4 px-5 rounded-2xl appearance-none focus:ring-2 focus:ring-blue-500 font-bold">
                     <option value="1">1 堂</option>
                     <option value="2">2 堂</option>
@@ -58,11 +58,11 @@
             </div>
             
             <button onclick="submitData()" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center">
-                <span>確認打卡</span>
+                <span>確認記錄</span>
             </button>
         </div>
         
-        <p class="text-center text-slate-300 text-[10px] mt-8 tracking-widest uppercase">Syncing with Google Sheets</p>
+        <p class="text-center text-slate-300 text-[10px] mt-8 tracking-widest uppercase">CC by Chester</p>
     </div>
 
     <script>
@@ -79,7 +79,6 @@
             try {
                 const response = await fetch(GAS_URL);
                 const data = await response.json();
-                
                 const remaining = data.remaining;
                 const used = data.totalUsed;
                 const total = 194;
@@ -117,7 +116,7 @@
                 }, 1000);
 
             } catch (error) {
-                alert("打卡失敗，網路異常");
+                alert("記錄失敗，網路異常");
                 btn.disabled = false;
                 btn.innerText = "確認記錄";
             }
